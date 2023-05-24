@@ -128,12 +128,12 @@ class Hashable(metaclass=ABCMeta):
         return NotImplemented
 
 
-class Awaitable(metaclass=ABCMeta):
+class Awaitable[T_co](metaclass=ABCMeta):
 
     __slots__ = ()
 
     @abstractmethod
-    def __await__(self):
+    def __await__(self) -> "Generator[object, object, T_co]":
         yield
 
     @classmethod
@@ -142,15 +142,13 @@ class Awaitable(metaclass=ABCMeta):
             return _check_methods(C, "__await__")
         return NotImplemented
 
-    __class_getitem__ = classmethod(GenericAlias)
 
-
-class Coroutine(Awaitable):
+class Coroutine[YieldType, SendType, ReturnType](Awaitable[ReturnType]):
 
     __slots__ = ()
 
     @abstractmethod
-    def send(self, value):
+    def send(self, value: SendType):
         """Send a value into the coroutine.
         Return next yielded value or raise StopIteration.
         """
@@ -189,12 +187,12 @@ class Coroutine(Awaitable):
 Coroutine.register(coroutine)
 
 
-class AsyncIterable(metaclass=ABCMeta):
+class AsyncIterable[T_co](metaclass=ABCMeta):
 
     __slots__ = ()
 
     @abstractmethod
-    def __aiter__(self):
+    def __aiter__(self) -> "AsyncIterator[T_co]":
         return AsyncIterator()
 
     @classmethod
@@ -203,15 +201,13 @@ class AsyncIterable(metaclass=ABCMeta):
             return _check_methods(C, "__aiter__")
         return NotImplemented
 
-    __class_getitem__ = classmethod(GenericAlias)
 
-
-class AsyncIterator(AsyncIterable):
+class AsyncIterator[T_co](AsyncIterable[T_co]):
 
     __slots__ = ()
 
     @abstractmethod
-    async def __anext__(self):
+    async def __anext__(self) -> T_co:
         """Return the next item or raise StopAsyncIteration when exhausted."""
         raise StopAsyncIteration
 
@@ -225,18 +221,18 @@ class AsyncIterator(AsyncIterable):
         return NotImplemented
 
 
-class AsyncGenerator(AsyncIterator):
+class AsyncGenerator[YieldType, SendType](AsyncIterator[YieldType]):
 
     __slots__ = ()
 
-    async def __anext__(self):
+    async def __anext__(self) -> YieldType:
         """Return the next item from the asynchronous generator.
         When exhausted, raise StopAsyncIteration.
         """
         return await self.asend(None)
 
     @abstractmethod
-    async def asend(self, value):
+    async def asend(self, value: SendType):
         """Send a value into the asynchronous generator.
         Return next yielded value or raise StopAsyncIteration.
         """
@@ -276,12 +272,12 @@ class AsyncGenerator(AsyncIterator):
 AsyncGenerator.register(async_generator)
 
 
-class Iterable(metaclass=ABCMeta):
+class Iterable[T_co](metaclass=ABCMeta):
 
     __slots__ = ()
 
     @abstractmethod
-    def __iter__(self):
+    def __iter__(self) -> "Iterator[T_co]":
         while False:
             yield None
 
@@ -291,15 +287,13 @@ class Iterable(metaclass=ABCMeta):
             return _check_methods(C, "__iter__")
         return NotImplemented
 
-    __class_getitem__ = classmethod(GenericAlias)
 
-
-class Iterator(Iterable):
+class Iterator[T_co](Iterable[T_co]):
 
     __slots__ = ()
 
     @abstractmethod
-    def __next__(self):
+    def __next__(self) -> T_co:
         'Return the next item from the iterator. When exhausted, raise StopIteration'
         raise StopIteration
 
@@ -329,12 +323,12 @@ Iterator.register(tuple_iterator)
 Iterator.register(zip_iterator)
 
 
-class Reversible(Iterable):
+class Reversible[T_co](Iterable[T_co]):
 
     __slots__ = ()
 
     @abstractmethod
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[T_co]:
         while False:
             yield None
 
@@ -345,18 +339,18 @@ class Reversible(Iterable):
         return NotImplemented
 
 
-class Generator(Iterator):
+class Generator[YieldType, SendType, ReturnType](Iterator[YieldType]):
 
     __slots__ = ()
 
-    def __next__(self):
+    def __next__(self) -> YieldType:
         """Return the next item from the generator.
         When exhausted, raise StopIteration.
         """
         return self.send(None)
 
     @abstractmethod
-    def send(self, value):
+    def send(self, value: SendType):
         """Send a value into the generator.
         Return next yielded value or raise StopIteration.
         """
@@ -411,7 +405,7 @@ class Sized(metaclass=ABCMeta):
         return NotImplemented
 
 
-class Container(metaclass=ABCMeta):
+class Container[T_co](metaclass=ABCMeta):
 
     __slots__ = ()
 
@@ -425,10 +419,8 @@ class Container(metaclass=ABCMeta):
             return _check_methods(C, "__contains__")
         return NotImplemented
 
-    __class_getitem__ = classmethod(GenericAlias)
 
-
-class Collection(Sized, Iterable, Container):
+class Collection[T_co](Sized, Iterable[T_co], Container[T_co]):
 
     __slots__ = ()
 
@@ -538,12 +530,12 @@ def _type_repr(obj):
     return repr(obj)
 
 
-class Callable(metaclass=ABCMeta):
+class Callable[**Params, ReturnType](metaclass=ABCMeta):
 
     __slots__ = ()
 
     @abstractmethod
-    def __call__(self, *args, **kwds):
+    def __call__(self, *args: Params.args, **kwds: Params.kwargs) -> ReturnType:
         return False
 
     @classmethod
@@ -558,7 +550,7 @@ class Callable(metaclass=ABCMeta):
 ### SETS ###
 
 
-class Set(Collection):
+class Set[T_co](Collection[T_co]):
     """A set is a finite, iterable container.
 
     This class provides concrete generic implementations of all
@@ -699,7 +691,7 @@ class Set(Collection):
 Set.register(frozenset)
 
 
-class MutableSet(Set):
+class MutableSet[T](Set[T]):
     """A mutable set is a finite, iterable container.
 
     This class provides concrete generic implementations of all
@@ -714,22 +706,22 @@ class MutableSet(Set):
     __slots__ = ()
 
     @abstractmethod
-    def add(self, value):
+    def add(self, value: T):
         """Add an element."""
         raise NotImplementedError
 
     @abstractmethod
-    def discard(self, value):
+    def discard(self, value: T):
         """Remove an element.  Do not raise an exception if absent."""
         raise NotImplementedError
 
-    def remove(self, value):
+    def remove(self, value: T):
         """Remove an element. If not a member, raise a KeyError."""
         if value not in self:
             raise KeyError(value)
         self.discard(value)
 
-    def pop(self):
+    def pop(self) -> T:
         """Return the popped value.  Raise KeyError if empty."""
         it = iter(self)
         try:
@@ -784,7 +776,7 @@ MutableSet.register(set)
 
 ### MAPPINGS ###
 
-class Mapping(Collection):
+class Mapping[KeyType, ValueType_co](Collection[KeyType]):
     """A Mapping is a generic container for associating key/value
     pairs.
 
@@ -851,10 +843,8 @@ class MappingView(Sized):
     def __repr__(self):
         return '{0.__class__.__name__}({0._mapping!r})'.format(self)
 
-    __class_getitem__ = classmethod(GenericAlias)
 
-
-class KeysView(MappingView, Set):
+class KeysView[T_co](MappingView, Set[T_co]):
 
     __slots__ = ()
 
@@ -862,17 +852,17 @@ class KeysView(MappingView, Set):
     def _from_iterable(cls, it):
         return set(it)
 
-    def __contains__(self, key):
+    def __contains__(self, key: T_co):
         return key in self._mapping
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[T_co, object, object]:
         yield from self._mapping
 
 
 KeysView.register(dict_keys)
 
 
-class ItemsView(MappingView, Set):
+class ItemsView[KeyType, ValueType_co](MappingView, Set[tuple[KeyType, ValueType_co]]):
 
     __slots__ = ()
 
@@ -889,7 +879,7 @@ class ItemsView(MappingView, Set):
         else:
             return v is value or v == value
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[tuple[KeyType, ValueType_co], object, object]:
         for key in self._mapping:
             yield (key, self._mapping[key])
 
@@ -897,11 +887,11 @@ class ItemsView(MappingView, Set):
 ItemsView.register(dict_items)
 
 
-class ValuesView(MappingView, Collection):
+class ValuesView[T_co](MappingView, Collection[T_co]):
 
     __slots__ = ()
 
-    def __contains__(self, value):
+    def __contains__(self, value: T_co):
         for key in self._mapping:
             v = self._mapping[key]
             if v is value or v == value:
@@ -916,7 +906,7 @@ class ValuesView(MappingView, Collection):
 ValuesView.register(dict_values)
 
 
-class MutableMapping(Mapping):
+class MutableMapping[KeyType, ValueType](Mapping[KeyType, ValueType]):
     """A MutableMapping is a generic container for associating
     key/value pairs.
 
@@ -928,16 +918,16 @@ class MutableMapping(Mapping):
     __slots__ = ()
 
     @abstractmethod
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: KeyType, value: ValueType):
         raise KeyError
 
     @abstractmethod
-    def __delitem__(self, key):
+    def __delitem__(self, key: KeyType):
         raise KeyError
 
     __marker = object()
 
-    def pop(self, key, default=__marker):
+    def pop(self, key: KeyType, default=__marker):
         '''D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
           If key is not found, d is returned if given, otherwise KeyError is raised.
         '''
@@ -951,7 +941,7 @@ class MutableMapping(Mapping):
             del self[key]
             return value
 
-    def popitem(self):
+    def popitem(self) -> tuple[KeyType, ValueType]:
         '''D.popitem() -> (k, v), remove and return some (key, value) pair
            as a 2-tuple; but raise KeyError if D is empty.
         '''
@@ -989,7 +979,7 @@ class MutableMapping(Mapping):
         for key, value in kwds.items():
             self[key] = value
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key: KeyType, default=None):
         'D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D'
         try:
             return self[key]
@@ -1003,7 +993,7 @@ MutableMapping.register(dict)
 
 ### SEQUENCES ###
 
-class Sequence(Reversible, Collection):
+class Sequence[T_co](Reversible[T_co], Collection[T_co]):
     """All the operations on a read-only sequence.
 
     Concrete subclasses must override __new__ or __init__,
@@ -1016,10 +1006,10 @@ class Sequence(Reversible, Collection):
     __abc_tpflags__ = 1 << 5 # Py_TPFLAGS_SEQUENCE
 
     @abstractmethod
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> T_co:
         raise IndexError
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[T_co, object, object]:
         i = 0
         try:
             while True:
@@ -1029,17 +1019,17 @@ class Sequence(Reversible, Collection):
         except IndexError:
             return
 
-    def __contains__(self, value):
+    def __contains__(self, value: T_co) -> bool:
         for v in self:
             if v is value or v == value:
                 return True
         return False
 
-    def __reversed__(self):
+    def __reversed__(self) -> Generator[T_co, object, object]:
         for i in reversed(range(len(self))):
             yield self[i]
 
-    def index(self, value, start=0, stop=None):
+    def index(self, value: T_co, start=0, stop=None):
         '''S.index(value, [start, [stop]]) -> integer -- return first index of value.
            Raises ValueError if the value is not present.
 
@@ -1062,7 +1052,7 @@ class Sequence(Reversible, Collection):
             i += 1
         raise ValueError
 
-    def count(self, value):
+    def count(self, value: T_co):
         'S.count(value) -> integer -- return number of occurrences of value'
         return sum(1 for v in self if v is value or v == value)
 
@@ -1103,7 +1093,7 @@ ByteString.register(bytes)
 ByteString.register(bytearray)
 
 
-class MutableSequence(Sequence):
+class MutableSequence[T](Sequence[T]):
     """All the operations on a read-write sequence.
 
     Concrete subclasses must provide __new__ or __init__,
@@ -1113,7 +1103,7 @@ class MutableSequence(Sequence):
     __slots__ = ()
 
     @abstractmethod
-    def __setitem__(self, index, value):
+    def __setitem__(self, index, value: T):
         raise IndexError
 
     @abstractmethod
@@ -1121,11 +1111,11 @@ class MutableSequence(Sequence):
         raise IndexError
 
     @abstractmethod
-    def insert(self, index, value):
+    def insert(self, index, value: T):
         'S.insert(index, value) -- insert value before index'
         raise IndexError
 
-    def append(self, value):
+    def append(self, value: T):
         'S.append(value) -- append value to the end of the sequence'
         self.insert(len(self), value)
 
@@ -1143,14 +1133,14 @@ class MutableSequence(Sequence):
         for i in range(n//2):
             self[i], self[n-i-1] = self[n-i-1], self[i]
 
-    def extend(self, values):
+    def extend(self, values: Iterable[T]):
         'S.extend(iterable) -- extend sequence by appending elements from the iterable'
         if values is self:
             values = list(values)
         for v in values:
             self.append(v)
 
-    def pop(self, index=-1):
+    def pop(self, index=-1) -> T:
         '''S.pop([index]) -> item -- remove and return item at index (default last).
            Raise IndexError if list is empty or index is out of range.
         '''
@@ -1158,13 +1148,13 @@ class MutableSequence(Sequence):
         del self[index]
         return v
 
-    def remove(self, value):
+    def remove(self, value: T):
         '''S.remove(value) -- remove first occurrence of value.
            Raise ValueError if the value is not present.
         '''
         del self[self.index(value)]
 
-    def __iadd__(self, values):
+    def __iadd__(self, values: Iterable[T]):
         self.extend(values)
         return self
 

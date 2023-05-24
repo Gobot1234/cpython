@@ -14,13 +14,11 @@ __all__ = ["asynccontextmanager", "contextmanager", "closing", "nullcontext",
            "chdir"]
 
 
-class AbstractContextManager(abc.ABC):
+class AbstractContextManager[T_co](abc.ABC):
 
     """An abstract base class for context managers."""
 
-    __class_getitem__ = classmethod(GenericAlias)
-
-    def __enter__(self):
+    def __enter__(self) -> T_co:
         """Return `self` upon entering the runtime context."""
         return self
 
@@ -36,13 +34,11 @@ class AbstractContextManager(abc.ABC):
         return NotImplemented
 
 
-class AbstractAsyncContextManager(abc.ABC):
+class AbstractAsyncContextManager[T_co](abc.ABC):
 
     """An abstract base class for asynchronous context managers."""
 
-    __class_getitem__ = classmethod(GenericAlias)
-
-    async def __aenter__(self):
+    async def __aenter__(self) -> T_co:
         """Return `self` upon entering the runtime context."""
         return self
 
