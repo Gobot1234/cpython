@@ -289,6 +289,15 @@ meth_repr(PyCFunctionObject *m)
 }
 
 static PyObject *
+meth_getitem(PyObject *self, PyObject *item) {
+    return Py_GenericAlias(self, item);
+}
+
+static PyMappingMethods meth_as_mapping = {
+    .mp_subscript = meth_getitem,
+};
+
+static PyObject *
 meth_richcompare(PyObject *self, PyObject *other, int op)
 {
     PyCFunctionObject *a, *b;
@@ -339,7 +348,7 @@ PyTypeObject PyCFunction_Type = {
     (reprfunc)meth_repr,                        /* tp_repr */
     0,                                          /* tp_as_number */
     0,                                          /* tp_as_sequence */
-    0,                                          /* tp_as_mapping */
+    &meth_as_mapping,                           /* tp_as_mapping */
     (hashfunc)meth_hash,                        /* tp_hash */
     cfunction_call,                             /* tp_call */
     0,                                          /* tp_str */

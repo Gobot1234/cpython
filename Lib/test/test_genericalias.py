@@ -47,7 +47,15 @@ except ImportError:
     ShareableList = None
 from os import DirEntry
 from re import Pattern, Match
-from types import GenericAlias, MappingProxyType, AsyncGeneratorType
+from types import (
+    AsyncGeneratorType,
+    BuiltinFunctionType,
+    BuiltinMethodType,
+    FunctionType,
+    GenericAlias,
+    MappingProxyType,
+    MethodType,
+)
 from tempfile import TemporaryDirectory, SpooledTemporaryFile
 from urllib.parse import SplitResult, ParseResult
 from unittest.case import _AssertRaisesContext
@@ -95,6 +103,7 @@ _UNPACKED_TUPLES = [
 class BaseTest(unittest.TestCase):
     """Test basics."""
     generic_types = [type, tuple, list, dict, set, frozenset, enumerate,
+                     FunctionType, MethodType, BuiltinFunctionType, BuiltinMethodType,
                      defaultdict, deque,
                      SequenceMatcher,
                      dircmp,
@@ -456,6 +465,25 @@ class BaseTest(unittest.TestCase):
         t = tuple[int, str]
         iter_x = iter(t)
         del iter_x
+
+    class Dummy:  # class with a settable __orig_class__
+        pass
+
+    def test_no_orig_class_set(self):
+        def foo[T]():
+            ret = self.Dummy()
+            ret.__orig_class__ = str  # random type
+            return ret
+
+        self.assertIs(foo[int]().__orig_class__, str)
+        self.assertIs(self.dummy_generic_method[int]().__orig_class__, str)
+
+        # TODO tests for C functions
+
+    def dummy_generic_method[T](self):
+        ret = self.Dummy()
+        ret.__orig_class__ = str
+        return ret
 
 
 class TypeIterationTests(unittest.TestCase):
