@@ -99,11 +99,19 @@ _UNPACKED_TUPLES = [
     tuple[*tuple[Unpack[tuple[int, ...]]]],
 ]
 
+def foo[T]():
+    pass
+
+class Bar:
+    def method[T](self):
+        pass
+
 
 class BaseTest(unittest.TestCase):
     """Test basics."""
     generic_types = [type, tuple, list, dict, set, frozenset, enumerate,
-                     FunctionType, MethodType, BuiltinFunctionType, BuiltinMethodType,
+                     FunctionType, MethodType,
+                     foo, Bar().method, max, dict.fromkeys,
                      defaultdict, deque,
                      SequenceMatcher,
                      dircmp,
