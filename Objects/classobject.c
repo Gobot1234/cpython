@@ -140,7 +140,6 @@ method___reduce___impl(PyMethodObject *self)
 
 static PyMethodDef method_methods[] = {
     METHOD___REDUCE___METHODDEF
-    {"__class_getitem__", Py_GenericAlias, METH_O|METH_CLASS, "See PEP 585"},
     {NULL, NULL}
 };
 

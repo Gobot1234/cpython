@@ -47,15 +47,7 @@ except ImportError:
     ShareableList = None
 from os import DirEntry
 from re import Pattern, Match
-from types import (
-    AsyncGeneratorType,
-    BuiltinFunctionType,
-    BuiltinMethodType,
-    FunctionType,
-    GenericAlias,
-    MappingProxyType,
-    MethodType,
-)
+from types import AsyncGeneratorType, GenericAlias, MappingProxyType
 from tempfile import TemporaryDirectory, SpooledTemporaryFile
 from urllib.parse import SplitResult, ParseResult
 from unittest.case import _AssertRaisesContext
@@ -110,7 +102,6 @@ class Bar:
 class BaseTest(unittest.TestCase):
     """Test basics."""
     generic_types = [type, tuple, list, dict, set, frozenset, enumerate,
-                     FunctionType, MethodType,
                      foo, Bar().method, max, dict.fromkeys,
                      defaultdict, deque,
                      SequenceMatcher,

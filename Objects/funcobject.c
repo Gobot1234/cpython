@@ -444,11 +444,6 @@ PyFunction_SetAnnotations(PyObject *op, PyObject *annotations)
     return 0;
 }
 
-static PyMethodDef func_methods[] = {
-    {"__class_getitem__", Py_GenericAlias, METH_O|METH_CLASS, "See PEP 585"},
-    {NULL, NULL},
-};
-
 /* Methods */
 
 #define OFF(x) offsetof(PyFunctionObject, x)
@@ -938,7 +933,7 @@ PyTypeObject PyFunction_Type = {
     offsetof(PyFunctionObject, func_weakreflist), /* tp_weaklistoffset */
     0,                                          /* tp_iter */
     0,                                          /* tp_iternext */
-    func_methods,                               /* tp_methods */
+    0,                                          /* tp_methods */
     func_memberlist,                            /* tp_members */
     func_getsetlist,                            /* tp_getset */
     0,                                          /* tp_base */
